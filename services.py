@@ -1,7 +1,33 @@
-def calculate_run_rate(total_runs: int, overs: float):
+matches = {
+    "match1": {
+        "batting_team": "RCB",
+        "bowling_team": "MI",
+        "innings": {
+            "runs": 120,
+            "wickets": 3,
+            "overs": 12.0,
+            "batters": [
+                {"name": "Virat Kohli", "runs": 55},
+                {"name": "Faf du Plessis", "runs": 40}
+            ],
+            "bowlers": [
+                {"name": "Jasprit Bumrah", "wickets": 2},
+                {"name": "Mohammed Shami", "wickets": 1}
+            ]
+        }
+    },
+
+    "match2": {
+        "batting_team": "CSK",
+        "bowling_team": "GT"
+    }
+}
+
+
+def calculate_run_rate(runs, overs):
     if overs == 0:
         return 0
-    return round(total_runs / overs, 2)
+    return round(runs / overs, 2)
 
 
 def get_top_batter(batters):
@@ -18,28 +44,34 @@ def get_top_bowler(bowlers):
     return f'{top["name"]} ({top["wickets"]})'
 
 
-# NEW: process ball events
-def process_ball_events(data):
-    runs = data["total_runs"]
-    wickets = data["total_wickets"]
+def get_match_scorecard(match_id: str):
+    match = matches.get(match_id)
 
-    for ball in data.get("ball_events", []):
-        runs += ball["runs"]
-        if ball["wicket"]:
-            wickets += 1
+    if not match:
+        return {"error": "Match not found"}
 
-    return runs, wickets
+    if "innings" not in match:
+        return {
+            "message": "Match exists but innings not started",
+            "batting_team": match["batting_team"],
+            "bowling_team": match["bowling_team"]
+        }
 
+    innings = match["innings"]
 
-def build_scorecard(data):
-    updated_runs, updated_wickets = process_ball_events(data)
+    runs = innings["runs"]
+    wickets = innings["wickets"]
+    overs = innings["overs"]
 
-    run_rate = calculate_run_rate(updated_runs, data["overs"])
+    run_rate = calculate_run_rate(runs, overs)
 
     return {
-        "live_score": f"{updated_runs}/{updated_wickets}",
+        "match_id": match_id,
+        "batting_team": match["batting_team"],
+        "bowling_team": match["bowling_team"],
+        "live_score": f"{runs}/{wickets}",
+        "overs": overs,
         "run_rate": run_rate,
-        "top_batter": get_top_batter(data.get("batters", [])),
-        "top_bowler": get_top_bowler(data.get("bowlers", [])),
-        "balls_processed": len(data.get("ball_events", []))
+        "top_batter": get_top_batter(innings["batters"]),
+        "top_bowler": get_top_bowler(innings["bowlers"])
     }
