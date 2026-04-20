@@ -2,11 +2,11 @@ from fastapi import FastAPI
 from schemas import MatchInput
 from services import build_scorecard
 
-app = FastAPI(title="Match Scoreboard API")
+app = FastAPI()
 
 @app.post("/scoreboard")
-def scoreboard(data: dict):
-    return build_scorecard(data)
+def scoreboard(data: MatchInput):
+    return build_scorecard(data.dict())
 
 
 # simple health check
